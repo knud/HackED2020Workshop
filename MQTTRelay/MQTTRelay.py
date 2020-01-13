@@ -124,23 +124,20 @@ if found == True:
     # connect to the reader
     if rb_nanov1Device.connectable:
         try:
-            try:
-                rb_nanov1 = Peripheral(rb_nanov1Device.addr, btle.ADDR_TYPE_RANDOM)
-                rb_nanov1.setDelegate(ReceptionDelegate())
-                services = rb_nanov1.getServices()
-                for s in services:
-                    if s.uuid == "00001523-1212-efde-1523-785feabcd123":
-                        print(s.uuid)
-                        characteristics = s.getCharacteristics()
-                        for c in characteristics:
-                            print("%s: %s" % (c.uuid, c.propertiesToString()))
-                            if c.uuid == "00001524-1212-efde-1523-785feabcd123":
-                                dataNotifyCharacteristic = c
-                                enable_notify(rb_nanov1, dataNotifyCharacteristic)
-                            if c.uuid == "00001525-1212-efde-1523-785feabcd123":
-                                commandCharacteristic = c
-            except BTLEException as e:
-                print("exception"+str(e))
+            rb_nanov1 = Peripheral(rb_nanov1Device.addr, btle.ADDR_TYPE_RANDOM)
+            rb_nanov1.setDelegate(ReceptionDelegate())
+            services = rb_nanov1.getServices()
+            for s in services:
+                if s.uuid == "00001523-1212-efde-1523-785feabcd123":
+                    print(s.uuid)
+                    characteristics = s.getCharacteristics()
+                    for c in characteristics:
+                        print("%s: %s" % (c.uuid, c.propertiesToString()))
+                        if c.uuid == "00001524-1212-efde-1523-785feabcd123":
+                            dataNotifyCharacteristic = c
+                            enable_notify(rb_nanov1, dataNotifyCharacteristic)
+                        if c.uuid == "00001525-1212-efde-1523-785feabcd123":
+                            commandCharacteristic = c
 
         except BTLEException as e:
             print("exception"+str(e))
