@@ -415,7 +415,6 @@ if found == True:
 
         except BTLEException:
             print("Error: Unable to connect to Nanor")
-
         while  True:
             commandString = b"\x00"
             commandToReader(betaReader, commandCharacteristic, commandString)
