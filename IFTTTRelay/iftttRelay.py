@@ -65,16 +65,16 @@ class ReceptionDelegate(DefaultDelegate):
     def isReceiving(self):
         return self.receiving
         
-def enable_notify(bleReader, characteristic):
+def enable_notify(blePeripheral, characteristic):
     setup_data = b"\x01\x00"
-#    notify = bleReader.getCharacteristics(uuid=chara_uuid)[0]
+#    notify = blePeripheral.getCharacteristics(uuid=chara_uuid)[0]
 #    notify_handle = notify.getHandle() + 1
     notify_handle = characteristic.getHandle() + 1
-    bleReader.writeCharacteristic(notify_handle, setup_data, withResponse=True)
+    blePeripheral.writeCharacteristic(notify_handle, setup_data, withResponse=True)
 
-def commandToReader(bleReader, characteristic, commandData):
+def commandToPeripheral(blePeripheral, characteristic, commandData):
     try:
-        bleReader.writeCharacteristic(characteristic.getHandle(), commandData, withResponse=False)
+        blePeripheral.writeCharacteristic(characteristic.getHandle(), commandData, withResponse=False)
     except:
         print("exception")
 
@@ -203,32 +203,32 @@ currentAntenna = 1
 currentTxPower = 1
 currentTuningCaps = 0
 
-def set_frequency(bleReader, characteristic):
+def set_frequency(blePeripheral, characteristic):
     global currentFrequency
     freqIndex = prompt(set_frequency_questions, style=custom_style_2)
     print("freq index = %s" % freqIndex['setFrequency']);
     currentFrequency = 902750 + int(freqIndex['setFrequency'])*500
     print("frequency = %d" % currentFrequency)
     commandString = b"\xE0006"+str(currentFrequency).encode('ascii')
-    commandToReader(rb_nanov1, commandCharacteristic, commandString)
+    commandToPeripheral(rb_nanov1, commandCharacteristic, commandString)
     if receivedCommandResponse():
         sleep(0.001)
     dummy = prompt(continue_questions, style=custom_style_2)
     clear()
     
-def set_antenna(bleReader, characteristic):
+def set_antenna(blePeripheral, characteristic):
     global currentAntenna
     antIndex = prompt(set_antenna_questions, style=custom_style_2)
     print("Antenna E%s selected" % antIndex['setAntenna']);
     currentAntenna = int(antIndex['setAntenna'])
     commandString = b"\xE1001"+str(currentAntenna)
-    commandToReader(rb_nanov1, commandCharacteristic, commandString)
+    commandToPeripheral(rb_nanov1, commandCharacteristic, commandString)
     if receivedCommandResponse():
         sleep(0.001)
     dummy = prompt(continue_questions, style=custom_style_2)
     clear()
 
-def set_power(bleReader, characteristic):
+def set_power(blePeripheral, characteristic):
     global currentTxPower
     powerIndex = prompt(set_power_questions, style=custom_style_2)
     print("%s power selected" % powerIndex['setPower']);
@@ -248,13 +248,13 @@ def set_power(bleReader, characteristic):
     if 'High' in powerSetting:
         currentTxPower = 4
         commandString = b"\xE20014"
-    commandToReader(rb_nanov1, commandCharacteristic, commandString)
+    commandToPeripheral(rb_nanov1, commandCharacteristic, commandString)
     if receivedCommandResponse():
         sleep(0.001)
     dummy = prompt(continue_questions, style=custom_style_2)
     clear()
 
-def continuous_tx(bleReader, characteristic):
+def continuous_tx(blePeripheral, characteristic):
     print("Using frequency %dkHz, antenna E%d, and %s TX power" %(currentFrequency, currentAntenna, txPowerToString(currentTxPower)))
     durationResp = prompt(continuous_tx_questions, style=custom_style_2)
     print("Transmitting for %s seconds" % durationResp['contTX']);
@@ -266,13 +266,13 @@ def continuous_tx(bleReader, characteristic):
             commandString = b"\xE30030"+str(dur)
         else:
             commandString = b"\xE3003"+str(dur)
-    commandToReader(rb_nanov1, commandCharacteristic, commandString)
+    commandToPeripheral(rb_nanov1, commandCharacteristic, commandString)
     if receivedCommandResponse():
         sleep(0.001)
     dummy = prompt(continue_questions, style=custom_style_2)
     clear()
     
-def set_tuning_caps(bleReader, characteristic):
+def set_tuning_caps(blePeripheral, characteristic):
     global currentTuningCaps
     capIndex = prompt(set_capacitor_questions, style=custom_style_2)
     print("3 capacitors will be set to %s" % capIndex['setCapacitors']);
@@ -281,17 +281,17 @@ def set_tuning_caps(bleReader, characteristic):
         commandString = b"\xE40020"+str(currentTuningCaps)
     else:
         commandString = b"\xE4002"+str(currentTuningCaps)
-    commandToReader(rb_nanov1, commandCharacteristic, commandString)
+    commandToPeripheral(rb_nanov1, commandCharacteristic, commandString)
     if receivedCommandResponse():
         sleep(0.001)
     dummy = prompt(continue_questions, style=custom_style_2)
     clear()
     
-def measure_refl_power(bleReader, characteristic):
+def measure_refl_power(blePeripheral, characteristic):
     print("Using antenna E%d, and %s TX power" %(currentAntenna, txPowerToString(currentTxPower)))
     commandString = b"\xE5000"
     print("Waiting for data...This can take a while...")
-    commandToReader(rb_nanov1, commandCharacteristic, commandString)
+    commandToPeripheral(rb_nanov1, commandCharacteristic, commandString)
     if receivedCommandResponse():
         sleep(0.001)
     sleep(0.5)
@@ -300,10 +300,10 @@ def measure_refl_power(bleReader, characteristic):
     dummy = prompt(continue_questions, style=custom_style_2)
     clear()
     
-def minimize_refl_power(bleReader, characteristic):
+def minimize_refl_power(blePeripheral, characteristic):
     print("Using antenna E%d, and %s TX power" %(currentAntenna, txPowerToString(currentTxPower)))
     commandString = b"\xE6000"
-    commandToReader(rb_nanov1, commandCharacteristic, commandString)
+    commandToPeripheral(rb_nanov1, commandCharacteristic, commandString)
     print("Waiting for data...This can take a while...")
     if receivedCommandResponse():
         sleep(0.001)
@@ -383,7 +383,7 @@ for dev in devices:
         if value == "Nordic_PWM":
             found = True
     if found == True:
-        betaDev = dev
+        rb_nanov1Device = dev
         break;
 
 
@@ -391,13 +391,13 @@ if found == True:
     # print  the device's MAC address, its address type,
     # and Received Signal Strength Indication that shows how strong the signal was when the script received the broadcast.
     print('---------------------------------------------------------------------------')
-    print("Found RedBear Nano v1 with address %s (%s), RSSI=%d dB" % (betaDev.addr, betaDev.addrType, betaDev.rssi) )
+    print("Found RedBear Nano v1 with address %s (%s), RSSI=%d dB" % (rb_nanov1Device.addr, rb_nanov1Device.addrType, rb_nanov1Device.rssi) )
     print('---------------------------------------------------------------------------')
 
     # connect to the reader
-    if betaDev.connectable:
+    if rb_nanov1Device.connectable:
         try:
-            rb_nanov1 = Peripheral(betaDev)
+            rb_nanov1 = Peripheral(rb_nanov1Device)
             rb_nanov1.setDelegate(ReceptionDelegate())
 #            rb_nanov1.setDelegate(ScanDelegate)
             services = rb_nanov1.getServices()
@@ -418,11 +418,11 @@ if found == True:
             
         while  True:
             commandString = b"\x00"
-            commandToReader(rb_nanov1, commandCharacteristic, commandString)
-            sleep(0.5);
+            commandToPeripheral(rb_nanov1, commandCharacteristic, commandString)
+            sleep(1);
             commandString = b"\xFF"
-            commandToReader(rb_nanov1, commandCharacteristic, commandString)
-            sleep(0.5);
+            commandToPeripheral(rb_nanov1, commandCharacteristic, commandString)
+            sleep(1);
     else:
         print ("not connectable")
 
