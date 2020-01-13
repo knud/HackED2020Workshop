@@ -415,6 +415,7 @@ if found == True:
 
         except BTLEException:
             print("Error: Unable to connect to Nanor")
+            
         while  True:
             commandString = b"\x00"
             commandToReader(betaReader, commandCharacteristic, commandString)
@@ -422,6 +423,8 @@ if found == True:
             commandString = b"\xFF"
             commandToReader(betaReader, commandCharacteristic, commandString)
             sleep(0.5);
+    else
+        print ("not connectable")
 
 #     clear()
 #     answers = prompt(level01_questions, style=custom_style_2)
