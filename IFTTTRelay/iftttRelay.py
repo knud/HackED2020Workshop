@@ -78,7 +78,7 @@ def enable_notify(blePeripheral, characteristic):
 def commandToPeripheral(blePeripheral, characteristic, commandData):
     try:
         blePeripheral.writeCharacteristic(characteristic.getHandle(), commandData, withResponse=False)
-    except BTLEException, e:
+    except BTLEException as e:
         print("exception"+str(e))
         nanoConnected = False
 
@@ -139,10 +139,10 @@ if found == True:
                                 enable_notify(rb_nanov1, dataNotifyCharacteristic)
                             if c.uuid == "00001525-1212-efde-1523-785feabcd123":
                                 commandCharacteristic = c
-            except BTLEException, e:
+            except BTLEException as e:
                 print("exception"+str(e))
 
-        except BTLEException, e:
+        except BTLEException as e:
             print("exception"+str(e))
             print("Error: Unable to connect to Nano")
             
@@ -160,7 +160,7 @@ if found == True:
                 try:
                     sleep(0.1)
                     rb_nanov1.connect(rb_nanov1Device.addr, btle.ADDR_TYPE_RANDOM)
-                except BTLEException, e:
+                except BTLEException as e:
                     print("connecting exception"+str(e))
                     
     else:
