@@ -18,6 +18,8 @@ import re
 
 from os import system
 
+nanoConnected = False
+
 # create a delegate class to receive the BLE broadcast packets
 class ScanDelegate(DefaultDelegate):
     def __init__(self):
@@ -78,10 +80,12 @@ def commandToPeripheral(blePeripheral, characteristic, commandData):
         blePeripheral.writeCharacteristic(characteristic.getHandle(), commandData, withResponse=False)
     except BTLEException, e:
         print("exception"+str(e))
+        nanoConnected = False
+
 
 
 print('-----------------------------')
-print('Scanning 10 s for Nano v1')
+print('Scanning 5 s for Nano v1')
 print('-----------------------------')
 
 # create a scanner object that sends BLE broadcast packets to the ScanDelegate
@@ -120,37 +124,44 @@ if found == True:
     # connect to the reader
     if rb_nanov1Device.connectable:
         try:
-            rb_nanov1 = Peripheral(rb_nanov1Device.addr, btle.ADDR_TYPE_RANDOM)
-            rb_nanov1.setDelegate(ReceptionDelegate())
-#            rb_nanov1.setDelegate(ScanDelegate)
-            services = rb_nanov1.getServices()
-            for s in services:
-                if s.uuid == "00001523-1212-efde-1523-785feabcd123":
-                    print(s.uuid)
-                    characteristics = s.getCharacteristics()
-                    for c in characteristics:
-                        print("%s: %s" % (c.uuid, c.propertiesToString()))
-                        if c.uuid == "00001524-1212-efde-1523-785feabcd123":
-                            dataNotifyCharacteristic = c
-                            enable_notify(rb_nanov1, dataNotifyCharacteristic)
-                        if c.uuid == "00001525-1212-efde-1523-785feabcd123":
-                            commandCharacteristic = c
+            try:
+                rb_nanov1 = Peripheral(rb_nanov1Device.addr, btle.ADDR_TYPE_RANDOM)
+                rb_nanov1.setDelegate(ReceptionDelegate())
+                services = rb_nanov1.getServices()
+                for s in services:
+                    if s.uuid == "00001523-1212-efde-1523-785feabcd123":
+                        print(s.uuid)
+                        characteristics = s.getCharacteristics()
+                        for c in characteristics:
+                            print("%s: %s" % (c.uuid, c.propertiesToString()))
+                            if c.uuid == "00001524-1212-efde-1523-785feabcd123":
+                                dataNotifyCharacteristic = c
+                                enable_notify(rb_nanov1, dataNotifyCharacteristic)
+                            if c.uuid == "00001525-1212-efde-1523-785feabcd123":
+                                commandCharacteristic = c
+            except BTLEException, e:
+                print("exception"+str(e))
 
-        except BTLEException:
+        except BTLEException, e:
+            print("exception"+str(e))
             print("Error: Unable to connect to Nano")
+            
+        nanoConnected = True
             
         commandStringOFF = b"\x00"
         commandStringON = b"\xFF"
         while  True:
-            if rb_nanov1.getState() == 'conn':
+            if nanoConnected:
                 commandToPeripheral(rb_nanov1, commandCharacteristic, commandStringOFF)
                 sleep(1);
                 commandToPeripheral(rb_nanov1, commandCharacteristic, commandStringON)
                 sleep(1);
             else:
-                print(" state %s" % (rb_nanov1.getState()))
-                if rb_nanov1.getState() == 'disc':
-                    print("disconnected")
+                try:
+                    sleep(0.1)
+                    rb_nanov1.connect(rb_nanov1Device.addr, btle.ADDR_TYPE_RANDOM)
+                except BTLEException, e:
+                    print("connecting exception"+str(e))
                     
     else:
         print ("not connectable")
