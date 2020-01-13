@@ -5,9 +5,9 @@ from __future__ import print_function, unicode_literals
 
 from pprint import pprint
 
-from PyInquirer import style_from_dict, Token, prompt, Separator, Validator, ValidationError
-
-from examples import custom_style_2
+# from PyInquirer import style_from_dict, Token, prompt, Separator, Validator, ValidationError
+# 
+# from examples import custom_style_2
 
 from bluepy import btle
 from bluepy.btle import Scanner, DefaultDelegate, Peripheral, UUID, BTLEException
