@@ -210,7 +210,7 @@ def set_frequency(bleReader, characteristic):
     currentFrequency = 902750 + int(freqIndex['setFrequency'])*500
     print("frequency = %d" % currentFrequency)
     commandString = b"\xE0006"+str(currentFrequency).encode('ascii')
-    commandToReader(betaReader, commandCharacteristic, commandString)
+    commandToReader(rb_nanov1, commandCharacteristic, commandString)
     if receivedCommandResponse():
         sleep(0.001)
     dummy = prompt(continue_questions, style=custom_style_2)
@@ -222,7 +222,7 @@ def set_antenna(bleReader, characteristic):
     print("Antenna E%s selected" % antIndex['setAntenna']);
     currentAntenna = int(antIndex['setAntenna'])
     commandString = b"\xE1001"+str(currentAntenna)
-    commandToReader(betaReader, commandCharacteristic, commandString)
+    commandToReader(rb_nanov1, commandCharacteristic, commandString)
     if receivedCommandResponse():
         sleep(0.001)
     dummy = prompt(continue_questions, style=custom_style_2)
@@ -248,7 +248,7 @@ def set_power(bleReader, characteristic):
     if 'High' in powerSetting:
         currentTxPower = 4
         commandString = b"\xE20014"
-    commandToReader(betaReader, commandCharacteristic, commandString)
+    commandToReader(rb_nanov1, commandCharacteristic, commandString)
     if receivedCommandResponse():
         sleep(0.001)
     dummy = prompt(continue_questions, style=custom_style_2)
@@ -266,7 +266,7 @@ def continuous_tx(bleReader, characteristic):
             commandString = b"\xE30030"+str(dur)
         else:
             commandString = b"\xE3003"+str(dur)
-    commandToReader(betaReader, commandCharacteristic, commandString)
+    commandToReader(rb_nanov1, commandCharacteristic, commandString)
     if receivedCommandResponse():
         sleep(0.001)
     dummy = prompt(continue_questions, style=custom_style_2)
@@ -281,7 +281,7 @@ def set_tuning_caps(bleReader, characteristic):
         commandString = b"\xE40020"+str(currentTuningCaps)
     else:
         commandString = b"\xE4002"+str(currentTuningCaps)
-    commandToReader(betaReader, commandCharacteristic, commandString)
+    commandToReader(rb_nanov1, commandCharacteristic, commandString)
     if receivedCommandResponse():
         sleep(0.001)
     dummy = prompt(continue_questions, style=custom_style_2)
@@ -291,7 +291,7 @@ def measure_refl_power(bleReader, characteristic):
     print("Using antenna E%d, and %s TX power" %(currentAntenna, txPowerToString(currentTxPower)))
     commandString = b"\xE5000"
     print("Waiting for data...This can take a while...")
-    commandToReader(betaReader, commandCharacteristic, commandString)
+    commandToReader(rb_nanov1, commandCharacteristic, commandString)
     if receivedCommandResponse():
         sleep(0.001)
     sleep(0.5)
@@ -303,7 +303,7 @@ def measure_refl_power(bleReader, characteristic):
 def minimize_refl_power(bleReader, characteristic):
     print("Using antenna E%d, and %s TX power" %(currentAntenna, txPowerToString(currentTxPower)))
     commandString = b"\xE6000"
-    commandToReader(betaReader, commandCharacteristic, commandString)
+    commandToReader(rb_nanov1, commandCharacteristic, commandString)
     print("Waiting for data...This can take a while...")
     if receivedCommandResponse():
         sleep(0.001)
@@ -315,11 +315,11 @@ def minimize_refl_power(bleReader, characteristic):
     
 def receivedCommandResponse():
     # TODO should really be more robust; report timeout, etc
-    while not betaReader.waitForNotifications(1.0):
+    while not rb_nanov1.waitForNotifications(1.0):
         print("waiting for notification")
 #        sleep(2.0)
-    while betaReader.delegate.isReceiving():
-        if not betaReader.waitForNotifications(1.0):
+    while rb_nanov1.delegate.isReceiving():
+        if not rb_nanov1.waitForNotifications(1.0):
             sleep(0.1)
     return True
     
@@ -397,10 +397,10 @@ if found == True:
     # connect to the reader
     if betaDev.connectable:
         try:
-            betaReader = Peripheral(betaDev)
-            betaReader.setDelegate(ReceptionDelegate())
-#            betaReader.setDelegate(ScanDelegate)
-            services = betaReader.getServices()
+            rb_nanov1 = Peripheral(betaDev)
+            rb_nanov1.setDelegate(ReceptionDelegate())
+#            rb_nanov1.setDelegate(ScanDelegate)
+            services = rb_nanov1.getServices()
             for s in services:
                 if s.uuid == "00001523-1212-efde-1523-785feabcd123":
                     print(s.uuid)
@@ -409,7 +409,7 @@ if found == True:
                         print("%s: %s" % (c.uuid, c.propertiesToString()))
                         if c.uuid == "00001524-1212-efde-1523-785feabcd123":
                             dataNotifyCharacteristic = c
-                            enable_notify(betaReader, dataNotifyCharacteristic)
+                            enable_notify(rb_nanov1, dataNotifyCharacteristic)
                         if c.uuid == "00001525-1212-efde-1523-785feabcd123":
                             commandCharacteristic = c
 
@@ -418,33 +418,33 @@ if found == True:
             
         while  True:
             commandString = b"\x00"
-            commandToReader(betaReader, commandCharacteristic, commandString)
+            commandToReader(rb_nanov1, commandCharacteristic, commandString)
             sleep(0.5);
             commandString = b"\xFF"
-            commandToReader(betaReader, commandCharacteristic, commandString)
+            commandToReader(rb_nanov1, commandCharacteristic, commandString)
             sleep(0.5);
-    else
+    else:
         print ("not connectable")
 
 #     clear()
 #     answers = prompt(level01_questions, style=custom_style_2)
 #     while answers['level01'] != 'Quit':
 #         if answers['level01'] == 'Set Frequency':
-#             set_frequency(betaReader, commandCharacteristic)
+#             set_frequency(rb_nanov1, commandCharacteristic)
 #         if answers['level01'] == 'Set Antenna':
-#             set_antenna(betaReader, commandCharacteristic)
+#             set_antenna(rb_nanov1, commandCharacteristic)
 #         if answers['level01'] == 'Set Tx power':
-#             set_power(betaReader, commandCharacteristic)
+#             set_power(rb_nanov1, commandCharacteristic)
 #         if answers['level01'] == 'Continuous Transmit':
-#             continuous_tx(betaReader, commandCharacteristic)
+#             continuous_tx(rb_nanov1, commandCharacteristic)
 #         if answers['level01'] == 'Set tuning capacitors to default':
-#             set_tuning_caps(betaReader, commandCharacteristic)
+#             set_tuning_caps(rb_nanov1, commandCharacteristic)
 #         if answers['level01'] == 'Measure reflected power':
-#             measure_refl_power(betaReader, commandCharacteristic)
+#             measure_refl_power(rb_nanov1, commandCharacteristic)
 #         if answers['level01'] == 'Minimize reflected power':
-#             minimize_refl_power(betaReader, commandCharacteristic)
+#             minimize_refl_power(rb_nanov1, commandCharacteristic)
 #             
-#        if betaReader.waitForNotifications(1.0):
+#        if rb_nanov1.waitForNotifications(1.0):
 #            print("notification...")
 #            continue
 #                         
