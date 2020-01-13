@@ -75,8 +75,8 @@ def enable_notify(blePeripheral, characteristic):
 def commandToPeripheral(blePeripheral, characteristic, commandData):
     try:
         blePeripheral.writeCharacteristic(characteristic.getHandle(), commandData, withResponse=False)
-    except:
-        print("exception")
+    except BTLEException, e:
+        print("exception"+str(e))
 
 def get_delivery_options(answers):
     options = ['bike', 'car', 'truck']
