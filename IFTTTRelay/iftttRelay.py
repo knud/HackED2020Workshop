@@ -9,6 +9,7 @@ from PyInquirer import style_from_dict, Token, prompt, Separator, Validator, Val
 
 from examples import custom_style_2
 
+from bluepy import btle
 from bluepy.btle import Scanner, DefaultDelegate, Peripheral, UUID, BTLEException
 
 from time import sleep
@@ -119,7 +120,7 @@ if found == True:
     # connect to the reader
     if rb_nanov1Device.connectable:
         try:
-            rb_nanov1 = Peripheral(rb_nanov1Device)
+            rb_nanov1 = Peripheral(rb_nanov1Device.addr, btle.ADDR_TYPE_RANDOM)
             rb_nanov1.setDelegate(ReceptionDelegate())
 #            rb_nanov1.setDelegate(ScanDelegate)
             services = rb_nanov1.getServices()
