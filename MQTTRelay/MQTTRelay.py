@@ -81,9 +81,9 @@ def commandToPeripheral(blePeripheral, characteristic, commandData):
 
 def updateNano(peripherial, newState):
     numAttempts = 5
-    attempt = 0
+    attempt = 1
     commandDelivered = False;
-    while attempt < numAttempts and not commandDelivered:
+    while attempt <= numAttempts and not commandDelivered:
         try:
             peripherial.connect(rb_nanov1Device.addr, btle.ADDR_TYPE_RANDOM)
             if peripherial.getState() == "conn":
@@ -96,8 +96,9 @@ def updateNano(peripherial, newState):
             else:
                 print('failed to connect')
         except BTLEException as e:
-            print("exception : "+str(e))
+#            print("exception : "+str(e))
             print("Error: Unable to connect to Nano")
+            sleep(0.05)
 
         try:
             sleep(0.05)
@@ -111,7 +112,10 @@ def updateNano(peripherial, newState):
             # it claims the bluepy-helper dies, and it does, so what is that about?
             sleep(0.05);
         if not commandDelivered:
-            print ("attempt %d" % attempt)
+            if attempt < numAttempts:
+                print ("attempt %d" % attempt)
+            else:
+                print ("...giving up :-(")
             attempt = attempt + 1
     if not commandDelivered:
         print("Failed to update the peripheral")
@@ -167,7 +171,7 @@ if found == True:
                         print("%s: %s" % (c.uuid, c.propertiesToString()))
                         if c.uuid == "00001524-1212-efde-1523-785feabcd123":
                             dataNotifyCharacteristic = c
-                            enable_notify(rb_nanov1, dataNotifyCharacteristic)
+#                             enable_notify(rb_nanov1, dataNotifyCharacteristic)
                         if c.uuid == "00001525-1212-efde-1523-785feabcd123":
                             commandCharacteristic = c
 
