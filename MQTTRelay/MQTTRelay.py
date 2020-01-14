@@ -141,6 +141,9 @@ if found == True:
             print("Error: Unable to connect to Nano")
             
         nanoConnected = True
+        
+        while True:
+            sleep(1)
 #             
 #         commandStringOFF = b"\x00"
 #         commandStringON = b"\xFF"
