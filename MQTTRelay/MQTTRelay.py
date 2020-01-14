@@ -139,11 +139,36 @@ if found == True:
         except BTLEException as e:
             print("exception"+str(e))
             print("Error: Unable to connect to Nano")
+            quit()
+
+        sleep(1)
             
+        rb_nanov1.disconnect()
         nanoConnected = True
-        
+        loopCount = 1;
         while True:
-            sleep(1)
+            print(loopCount)
+            try:
+#                 rb_nanov1 = Peripheral(rb_nanov1Device.addr, btle.ADDR_TYPE_RANDOM)
+                sleep(5)
+                rb_nanov1.connect(rb_nanov1Device.addr, btle.ADDR_TYPE_RANDOM)
+                if rb_nanov1.getState() == "conn":
+                    print('connected')
+                else:
+                    print('failed to connect')
+                sleep(5)
+                rb_nanov1.disconnect()
+                if rb_nanov1.getState() == "disc":
+                    print('disconnected')
+                else:
+                    print('failed to disconnect')
+            except BTLEException as e:
+                print("exception"+str(e))
+                print("Error: Unable to connect to Nano")
+                rb_nanov1.disconnect()
+
+
+            loopCount = loopCount + 1
 #             
 #         commandStringOFF = b"\x00"
 #         commandStringON = b"\xFF"
