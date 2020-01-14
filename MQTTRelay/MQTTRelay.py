@@ -2,23 +2,20 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, unicode_literals
-
 from pprint import pprint
-
-# from PyInquirer import style_from_dict, Token, prompt, Separator, Validator, ValidationError
-# 
-# from examples import custom_style_2
-
 from bluepy import btle
 from bluepy.btle import Scanner, DefaultDelegate, Peripheral, UUID, BTLEException
-
 from time import sleep
-
+from Adafruit_IO import Client, RequestError
 import re
-
+import os
 from os import system
 
 nanoConnected = False
+
+#----------------------------------------------------------------------------
+# BLE stuff
+#----------------------------------------------------------------------------
 
 # create a delegate class to receive the BLE broadcast packets
 class ScanDelegate(DefaultDelegate):
@@ -106,9 +103,9 @@ for dev in devices:
     # desc is a human-readable description of the data type and value is the data itself\
     found = False
     for (adtype, desc, value) in dev.getScanData():
-        print ( "  %s = %s" % (desc, value) )
         if value == "Nordic_PWM":
             found = True
+            print ( "  %s = %s" % (desc, value) )
     if found == True:
         rb_nanov1Device = dev
         break;
@@ -125,7 +122,7 @@ if found == True:
     if rb_nanov1Device.connectable:
         try:
             rb_nanov1 = Peripheral(rb_nanov1Device.addr, btle.ADDR_TYPE_RANDOM)
-            rb_nanov1.setDelegate(ReceptionDelegate())
+#            rb_nanov1.setDelegate(ReceptionDelegate())
             services = rb_nanov1.getServices()
             for s in services:
                 if s.uuid == "00001523-1212-efde-1523-785feabcd123":
@@ -144,21 +141,21 @@ if found == True:
             print("Error: Unable to connect to Nano")
             
         nanoConnected = True
-            
-        commandStringOFF = b"\x00"
-        commandStringON = b"\xFF"
-        while  True:
-            if nanoConnected:
-                commandToPeripheral(rb_nanov1, commandCharacteristic, commandStringOFF)
-                sleep(1);
-                commandToPeripheral(rb_nanov1, commandCharacteristic, commandStringON)
-                sleep(1);
-            else:
-                try:
-                    sleep(0.1)
-                    rb_nanov1.connect(rb_nanov1Device.addr, btle.ADDR_TYPE_RANDOM)
-                except BTLEException as e:
-                    print("connecting exception"+str(e))
+#             
+#         commandStringOFF = b"\x00"
+#         commandStringON = b"\xFF"
+#         while  True:
+#             if nanoConnected:
+#                 commandToPeripheral(rb_nanov1, commandCharacteristic, commandStringOFF)
+#                 sleep(1);
+#                 commandToPeripheral(rb_nanov1, commandCharacteristic, commandStringON)
+#                 sleep(1);
+#             else:
+#                 try:
+#                     sleep(0.1)
+#                     rb_nanov1.connect(rb_nanov1Device.addr, btle.ADDR_TYPE_RANDOM)
+#                 except BTLEException as e:
+#                     print("connecting exception"+str(e))
                     
     else:
         print ("not connectable")
