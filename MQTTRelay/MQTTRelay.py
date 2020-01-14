@@ -142,7 +142,7 @@ for dev in devices:
     # desc is a human-readable description of the data type and value is the data itself\
     found = False
     for (adtype, desc, value) in dev.getScanData():
-        if value == "Nordic_PWM":
+        if value == "HackED_PWM":
             found = True
             print ( "  %s = %s" % (desc, value) )
     if found == True:
