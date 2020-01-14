@@ -11,7 +11,8 @@ import re
 import os
 from os import system
 
-nanoConnected = False
+ADAFRUIT_IO_KEY = 'b25c2c664f0545a799b273029bfee3ce'
+ADAFRUIT_IO_USERNAME = 'eeknud'
 
 #----------------------------------------------------------------------------
 # BLE stuff
@@ -76,10 +77,44 @@ def commandToPeripheral(blePeripheral, characteristic, commandData):
     try:
         blePeripheral.writeCharacteristic(characteristic.getHandle(), commandData, withResponse=False)
     except BTLEException as e:
-        print("exception"+str(e))
-        nanoConnected = False
+        print("exception : "+str(e))
 
+def updateNano(peripherial, newState):
+    numAttempts = 5
+    attempt = 0
+    commandDelivered = False;
+    while attempt < numAttempts and not commandDelivered:
+        try:
+            peripherial.connect(rb_nanov1Device.addr, btle.ADDR_TYPE_RANDOM)
+            if peripherial.getState() == "conn":
+#                 print('connected')
+                if newState == "ON":
+                    commandToPeripheral(peripherial, commandCharacteristic, commandStringON)
+                else:
+                    commandToPeripheral(peripherial, commandCharacteristic, commandStringOFF)
+                commandDelivered = True
+            else:
+                print('failed to connect')
+        except BTLEException as e:
+            print("exception : "+str(e))
+            print("Error: Unable to connect to Nano")
 
+        try:
+            sleep(0.05)
+            peripherial.disconnect()
+            if peripherial.getState() == "disc":
+                print('disconnected')
+            else:
+                print('failed to disconnect')
+        except BTLEException as e:
+            # Ignore this exception as bluepy seems broken about disconnecting.
+            # it claims the bluepy-helper dies, and it does, so what is that about?
+            sleep(0.05);
+        if not commandDelivered:
+            print ("attempt %d" % attempt)
+            attempt = attempt + 1
+    if not commandDelivered:
+        print("Failed to update the peripheral")
 
 print('-----------------------------')
 print('Scanning 5 s for Nano v1')
@@ -137,63 +172,44 @@ if found == True:
                             commandCharacteristic = c
 
         except BTLEException as e:
-            print("exception"+str(e))
-            print("Error: Unable to connect to Nano")
+            print("exception : "+str(e))
+            print("Error: Unable to connect to Nano and find its services")
             quit()
-
-        sleep(1)
-            
-        rb_nanov1.disconnect()
-#         nanoConnected = True
+        
+        # Disconnect until something needs to be changed
+        try:
+            rb_nanov1.disconnect()
+        except BTLEException as e:
+            # Don't actuall care if there is a failure to disconnect. 
+            sleep(0.05);
+        
+        # define the commands to control the remote device
         commandStringOFF = b"\x00"
         commandStringON = b"\xFF"
-        loopCount = 1;
+        
+        aio = Client(ADAFRUIT_IO_USERNAME, ADAFRUIT_IO_KEY) 
+
+        try:
+            motorControlFeed = aio.feeds('motor-control')
+        except RequestError:
+            print("feed error")
+
+        # get the current motor state
+        motorControlState = aio.receive(motorControlFeed.key)
+        motorState = motorControlState.value
+        print("Initial Motor State : %s" % (motorState) )
+        sleep(0.1)
+        updateNano(rb_nanov1, motorState)
+
+        # Look for any changes initiated by IFTTT and relayed by Adafruit IO
         while True:
-            print(loopCount)
-            try:
-#                 rb_nanov1 = Peripheral(rb_nanov1Device.addr, btle.ADDR_TYPE_RANDOM)
-                sleep(5)
-                rb_nanov1.connect(rb_nanov1Device.addr, btle.ADDR_TYPE_RANDOM)
-                if rb_nanov1.getState() == "conn":
-                    print('connected')
-                    commandToPeripheral(rb_nanov1, commandCharacteristic, commandStringON)
-                    sleep(2);
-                    commandToPeripheral(rb_nanov1, commandCharacteristic, commandStringOFF)
-#                     sleep(1);
-                else:
-                    print('failed to connect')
-            except BTLEException as e:
-                print("exception : "+str(e))
-                print("Error: Unable to connect to Nano")
+            motorControlState = aio.receive(motorControlFeed.key)
+#             print("Motor State : %s" % (motorControlState.value) )
+            if motorControlState.value != motorState:
+                print("Motor State changed to: %s" % (motorControlState.value) )
+                motorState = motorControlState.value
+                updateNano(rb_nanov1, motorState)
 
-            try:
-                sleep(5)
-                rb_nanov1.disconnect()
-                if rb_nanov1.getState() == "disc":
-                    print('disconnected')
-                else:
-                    print('failed to disconnect')
-            except BTLEException as e:
-                sleep(0.05);
-#                 print("exception : "+str(e))
-#                 print("Error: Unable to disconnect from Nano")
-
-            loopCount = loopCount + 1
-#             
-#         commandStringOFF = b"\x00"
-#         commandStringON = b"\xFF"
-#         while  True:
-#             if nanoConnected:
-#                 commandToPeripheral(rb_nanov1, commandCharacteristic, commandStringOFF)
-#                 sleep(1);
-#                 commandToPeripheral(rb_nanov1, commandCharacteristic, commandStringON)
-#                 sleep(1);
-#             else:
-#                 try:
-#                     sleep(0.1)
-#                     rb_nanov1.connect(rb_nanov1Device.addr, btle.ADDR_TYPE_RANDOM)
-#                 except BTLEException as e:
-#                     print("connecting exception"+str(e))
-                    
+            sleep(3)
     else:
         print ("not connectable")
